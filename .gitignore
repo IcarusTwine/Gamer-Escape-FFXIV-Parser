@@ -1,5 +1,6 @@
 csv/*
 __pycache__/*
 Utils/__pycache__/*
+Wiki_Generation/__pycache__/*
 patchdata/*
 patchlist.json
