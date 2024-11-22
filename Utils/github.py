@@ -16,12 +16,12 @@ def list_github_files(owner, repo, path='', branch='master', token=None):
 		print(f"Error: {response.status_code} - {response.json().get('message')}")
 		return []
 
-def calculate_local_file_hash(filepath):
-	hash_md5 = hashlib.md5()
+def calculate_git_blob_sha(filepath):
 	with open(filepath, 'rb') as f:
-		for chunk in iter(lambda: f.read(8192), b""):
-			hash_md5.update(chunk)
-	return hash_md5.hexdigest()
+		content = f.read()
+	blob_header = f"blob {len(content)}\0".encode('utf-8')
+	blob_data = blob_header + content
+	return hashlib.sha1(blob_data).hexdigest()
 
 def download_file(url, output_path, token=None):
 	headers = {}
@@ -46,14 +46,12 @@ def sync_github_folder(owner, repo, folder_path, local_path, branch='master', to
 			file_sha = file['sha']
 			local_file_path = os.path.join(local_path, file_name)
 			
-			# Check if the file exists and compare hash
 			if os.path.exists(local_file_path):
-				local_hash = calculate_local_file_hash(local_file_path)
-				if local_hash == file_sha:
+				local_blob_sha = calculate_git_blob_sha(local_file_path)
+				if local_blob_sha == file_sha:
 					print(f"File '{file_name}' is up-to-date. Skipping download.")
 					continue
 			
-			# Download if file is missing or hash doesn't match
 			print(f"Downloading {file_name} to {local_file_path}")
 			download_file(file['download_url'], local_file_path, token)
 		
@@ -61,4 +59,3 @@ def sync_github_folder(owner, repo, folder_path, local_path, branch='master', to
 			subfolder_path = os.path.join(folder_path, file['name'])
 			subfolder_local_path = os.path.join(local_path, file['name'])
 			sync_github_folder(owner, repo, subfolder_path, subfolder_local_path, branch, token)
-
