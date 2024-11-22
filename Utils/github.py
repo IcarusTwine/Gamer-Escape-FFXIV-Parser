@@ -37,25 +37,37 @@ def download_file(url, output_path, token=None):
 			print(f"Failed to download {url}: {response.status_code} - {response.reason}")
 
 def sync_github_folder(owner, repo, folder_path, local_path, branch='master', token=None):
-	os.makedirs(local_path, exist_ok=True)
 	files = list_github_files(owner, repo, folder_path, branch, token)
-	
-	for file in files:
-		if file['type'] == 'file':
-			file_name = file['name']
-			file_sha = file['sha']
-			local_file_path = os.path.join(local_path, file_name)
-			
-			if os.path.exists(local_file_path):
-				local_blob_sha = calculate_git_blob_sha(local_file_path)
-				if local_blob_sha == file_sha:
-					print(f"File '{file_name}' is up-to-date. Skipping download.")
-					continue
-			
-			print(f"Downloading {file_name} to {local_file_path}")
-			download_file(file['download_url'], local_file_path, token)
+	if 'type' in files:
+		file_name = files['name']
+		file_sha = files['sha']
+		local_file_path = os.path.join("./", file_name)
 		
-		elif file['type'] == 'dir':
-			subfolder_path = os.path.join(folder_path, file['name'])
-			subfolder_local_path = os.path.join(local_path, file['name'])
-			sync_github_folder(owner, repo, subfolder_path, subfolder_local_path, branch, token)
+		if os.path.exists(local_file_path):
+			local_blob_sha = calculate_git_blob_sha(local_file_path)
+			if local_blob_sha == file_sha:
+				print(f"File '{file_name}' is up-to-date. Skipping download.")
+		else:
+			print(f"Downloading {file_name} to {local_file_path}")
+			download_file(files['download_url'], local_file_path, token)
+	else:
+		os.makedirs(local_path, exist_ok=True)
+		for file in files:
+			if file['type'] == 'file':
+				file_name = file['name']
+				file_sha = file['sha']
+				local_file_path = os.path.join(local_path, file_name)
+				
+				if os.path.exists(local_file_path):
+					local_blob_sha = calculate_git_blob_sha(local_file_path)
+					if local_blob_sha == file_sha:
+						print(f"File '{file_name}' is up-to-date. Skipping download.")
+						continue
+				
+				print(f"Downloading {file_name} to {local_file_path}")
+				download_file(file['download_url'], local_file_path, token)
+			
+			elif file['type'] == 'dir':
+				subfolder_path = os.path.join(folder_path, file['name'])
+				subfolder_local_path = os.path.join(local_path, file['name'])
+				sync_github_folder(owner, repo, subfolder_path, subfolder_local_path, branch, token)
