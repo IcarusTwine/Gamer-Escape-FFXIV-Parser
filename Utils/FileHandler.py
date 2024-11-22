@@ -29,5 +29,7 @@ def csvs_to_dicts(filelist):
 			if strkey in patchdata:
 				v = str(patchdata[strkey])
 				output[file][strkey]['patchversion'] = patchlist.get(v, "0.0")
+			else:
+				output[file][strkey]['patchversion'] = "0.0"
 
 	return output
