@@ -10,7 +10,8 @@ def gen_items():
 		[
 			'Item', 
 			'ItemUICategory', 
-			'ClassJobCategory'
+			'ClassJobCategory',
+			'ClassJob'
 		]
 	)
 	output = {}
@@ -31,6 +32,34 @@ def gen_items():
 		RequiredClasses = None
 		if int(item['ClassJobCategory']) > 0:
 			RequiredClasses = Data['ClassJobCategory'].get(item['ClassJobCategory'],'').get("Name","")
+		untradable = None
+		if item['IsUntradable'] == "True":
+			untradable = "Yes"
+		unique = None
+		if item['IsUnique'] == "True":
+			unique = "Yes"
+
+		Repair = None
+		Extractable = None
+		excluded_categories = {
+			33, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 
+			61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 
+			79, 80, 81, 82, 83, 85, 86, 90, 91, 92, 93, 94, 95, 100, 101, 102, 103, 104
+		}
+		if (item['ClassJob{Repair}'] == "0" or int(item['ItemUICategory']) in excluded_categories):
+			Extractable = "No"
+		else:
+			class_job_name = Data['ClassJob'].get(item['ClassJob{Repair}'], {}).get('Name', "")
+			Repair = class_job_name.title()
+			
+			if int(item['MaterializeType']) > 0:
+				Extractable = "Yes"
+			else:
+				Extractable = "No"
+
+		Damage = None
+		
+
 		output[id] = {
 			"Patch" : item['patchversion'],
 			"Index" : id,
@@ -42,7 +71,13 @@ def gen_items():
 			"Slots" : Slots,
 			"Advanced Melds" : advancedmelding,
 			"Stack" : stack,
-			"Requires" : RequiredClasses
+			"Requires" : RequiredClasses,
+			"Required Level" : item['Level{Equip}'],
+			"Item Level" : item['Level{Item}'],
+			"Untradable" : untradable,
+			"Unique" : unique,
+			"Extractable" : Extractable,
+			"Repair" : Repair,
 		}
 
-	print(output['4005'])
+	print(output['4013'])
